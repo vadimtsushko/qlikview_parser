@@ -43,9 +43,10 @@ class Atom:
 
 class Func:
     """ Function expression """
-    def __init__(self, parser,name, parmList):
+    def __init__(self, parser,name, parmList, modifierList):
         self.name = name
         self.args = parmList
+        self.modifiers = modifierList
         self.prec = 98
         self.checkParams()
     def exprToString(self):
@@ -63,8 +64,8 @@ class Func:
             raise WrongParamsError((line, column),"Function arguments error at %s." % (self.exprToString()))
     def printString(self):
         args = [a.printString() for a in self.args]
-        #modifierStr = ",".join(self.modifiers)
-        return "function_%s(%s)"%(self.name,",".join(args))
+        modifierStr = " ".join(self.modifiers)
+        return "function_%s(%s %s)"%(self.name,modifierStr,",".join(args))
 
 
 # Grammar for arithmetic expressions
@@ -78,7 +79,7 @@ class ExpressionParser(tpg.Parser):
 
 
     token distinct "DISTINCT" ;
-    token total "TOTAL" ;
+    token total "TOTAL\s*(<\s*\w+\s*(,\s*\w+\s*)>)*" ;
     token real      '(\d+\.\d*|\d*\.\d+)([eE][-+]?\d+)?|\d+[eE][-+]?\d+' ;
     token integer   '\d+' ;
     token str1 '".*?"' ;
@@ -103,13 +104,13 @@ class ExpressionParser(tpg.Parser):
                      )?
     ;
 
-    FUNC/a ->                          $ params = []
+    FUNC/a ->                          $ params,modifiers = [], []
         func/f "\(" 
-            ( total  )? 
+            ( total/t  $modifiers.append(t)$)? 
             (distinct )? 
             ( EXPR/x $params.append(x)$ )? 
             ( "," EXPR/xn $params.append(xn)$ )*  
-                "\)" $ a = Func(self,f,params)
+                "\)" $ a = Func(self,f,params, modifiers)
     ;    
     ATOM/a ->
            ident/s                            $ a=Atom(s)
@@ -118,6 +119,7 @@ class ExpressionParser(tpg.Parser):
        |   str2/s                             $ a=Atom(s)                              
        |   real/s                             $ a=Atom(s)
        |    "\(" EXPR/a "\)"
+       |    "\$\(=" EXPR/a "\)"
        |    FUNC/a
     ;
 
@@ -130,7 +132,8 @@ class ExpressionParser(tpg.Parser):
     """
 
 parser = ExpressionParser()
-e = "a + min(disTINCT 'asd', 3 , 5)"
+#e = "a + min(total<Начало, Start> 'asd', 3 , 5)"
+e = "a + min(total<Начало, Start> 'asd', $(=min(3)) , 5)"
 try:
     expr = parser(e+"\n")
     #print('asdf')
