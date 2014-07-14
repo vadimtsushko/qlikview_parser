@@ -28,18 +28,26 @@ class Op:
         b = self.b.exprToString()
         if self.b.prec <= self.prec: b = "(%s)"%b
         return "%s %s %s"%(a, self.op, b)
-    def printString(self):
-        a = self.a.printString()
-        b = self.b.printString()
+    def __repr__(self):
+        a = self.a.__repr__()
+        b = self.b.__repr__()
         return "Op(%s %s %s)"%(self.op,a,b)
 
+class Token:
+    """ Terminal token"""
+    def __init__(self, val, t):
+        self.val = val
+        self.type = t
+    def __repr__(self):
+        return "Token(val=%r, type=%r)" % (self.val, self.type)    
 class Atom:
     """ Atomic expression """
-    def __init__(self, s):
+    def __init__(self, s, t):
         self.a = s
         self.prec = 99
+        self.type = t
     def exprToString(self): return self.a
-    def printString(self): return 'Atom(%s)' % self.a
+    def __repr__(self): return 'Atom(a=%s,t=%s)' % (self.a, self.type)
 
 class Func:
     """ Function expression """
@@ -62,8 +70,8 @@ class Func:
                 last_token = parser.lexer.last_token.text
                 line, column = parser.lexer.last_token.line, parser.lexer.last_token.column
             raise WrongParamsError((line, column),"Function arguments error at %s." % (self.exprToString()))
-    def printString(self):
-        args = [a.printString() for a in self.args]
+    def __repr__(self):
+        args = [a.__repr__() for a in self.args]
         modifierStr = " ".join(self.modifiers)
         return "function_%s(%s %s)"%(self.name,modifierStr,",".join(args))
 
@@ -113,13 +121,13 @@ class ExpressionParser(tpg.Parser):
                 "\)" $ a = Func(self,f,params, modifiers)
     ;    
     ATOM/a ->
-           ident/s                            $ a=Atom(s)
-       |   integer/s                          $ a=Atom(s)
-       |   str1/s                             $ a=Atom(s)                              
-       |   str2/s                             $ a=Atom(s)                              
-       |   real/s                             $ a=Atom(s)
+           ident/s                            $ a=Atom(s,'ident')
+       |   integer/s                          $ a=Atom(s,'integer')
+       |   str1/s                             $ a=Atom(s,'string')                              
+       |   str2/s                             $ a=Atom(s,'string')                              
+       |   real/s                             $ a=Atom(s,'real')
        |    "\(" EXPR/a "\)"
-       |    "\$\(=" EXPR/a "\)"
+       |    "\$\(=(?!\s)" EXPR/a "\)"
        |    FUNC/a
     ;
 
@@ -141,4 +149,5 @@ except tpg.Error:
     print(tpg.exc())
 else:
     print("\texprToString   : %s "%expr.exprToString())
-    print("\touput   : %s "%expr.printString())
+    print("\touput   : %s " % expr)
+    print(Token(123,'int'))
