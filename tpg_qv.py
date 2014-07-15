@@ -98,7 +98,7 @@ class ExpressionParser(tpg.Parser):
 
 
     START/e ->
-        EXPR/e          "\n";
+        EXPR/e         ;
 
     # exprToString expressions
 
@@ -139,15 +139,15 @@ class ExpressionParser(tpg.Parser):
 
     """
 
-parser = ExpressionParser()
-#e = "a + min(total<Начало, Start> 'asd', 3 , 5)"
-e = "a + min(total<Начало, Start> 'asd', $(=min(3)) , 5)"
-try:
-    expr = parser(e+"\n")
-    #print('asdf')
-except tpg.Error:
-    print(tpg.exc())
-else:
-    print("\texprToString   : %s "%expr.exprToString())
-    print("\touput   : %s " % expr)
-    print(Token(123,'int'))
+# parser = ExpressionParser()
+# #e = "a + min(total<Начало, Start> 'asd', 3 , 5)"
+# e = "a + min(total<Начало, Start> 'asd', $(=min(3)) , 5)"
+# try:
+#     expr = parser(e+"\n")
+#     #print('asdf')
+# except tpg.Error:
+#     print(tpg.exc())
+# else:
+#     print("\texprToString   : %s "%expr.exprToString())
+#     print("\touput   : %s " % expr)
+#     print(Token(123,'int'))
